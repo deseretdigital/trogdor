@@ -10,6 +10,7 @@ var Q = require('q');
 var MasterUpdater = require('./lib/MasterUpdater');
 var BranchUpdater = require('./lib/BranchUpdater');
 var LinkUpdater = require('./lib/LinkUpdater');
+var Web = require('./lib/Web');
 
 function Trogdor(){
     this.listeners = [];
@@ -24,6 +25,34 @@ Trogdor.prototype.on = function(eventName, callback){
     }
 
     this.listeners[eventName].push(callback);
+};
+
+Trogdor.prototype.emit = function(eventName, env){
+    var deferred = Q.defer();
+
+    if(this.listeners[eventName])
+    {
+        var promises = [];
+
+        _.forEach(this.listeners[eventName], function(cb){
+            var ret = cb(env);
+
+            // Wrap return in a resolved promise if it isn't one already
+            var promise = Q(ret); 
+
+            promises.push(promise);
+        });
+
+        Q.all(promises).then(function(){
+            deferred.resolve();
+        }).done();
+    }
+    else
+    {
+        deferred.resolve();
+    }
+
+    return deferred.promise;
 };
 
 Trogdor.prototype.configure = function(configData) {
@@ -58,6 +87,9 @@ Trogdor.prototype.run = function () {
             throw err;
         })
         .done();
+
+    var web = Web(this);
+    web.listen(3000);
 };
 
 Trogdor.prototype.updateMaster = function()
@@ -80,7 +112,6 @@ Trogdor.prototype.updateBranches = function(){
     console.log("Updating Branches");
 
     console.log('wtf?', this);
-    console.log(this.config);
 
     var masterDir = this.config.paths.master;
     var branchDir = this.config.paths.branches;
@@ -89,7 +120,8 @@ Trogdor.prototype.updateBranches = function(){
     var branchUpdater = BranchUpdater({
         repos: this.config.repos,
         masterDir: masterDir,
-        branchDir: branchDir
+        branchDir: branchDir,
+        trogdor: this
     });
 
     console.log("calling run");
@@ -130,4 +162,5 @@ Trogdor.prototype.finish = function(){
 Trogdor.prototype.Trogdor = Trogdor;
 
 var inst = new Trogdor();
+inst.Q = Q;
 module.exports = inst;
