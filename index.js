@@ -7,6 +7,7 @@ var deprecated = require('deprecated');
 var vfs = require('vinyl-fs');
 var _ = require('lodash');
 var Q = require('q');
+var shell = require('shelljs');
 var MasterUpdater = require('./lib/MasterUpdater');
 var BranchUpdater = require('./lib/BranchUpdater');
 var LinkUpdater = require('./lib/LinkUpdater');
@@ -78,18 +79,41 @@ Trogdor.prototype.run = function () {
     console.log("running!");
     console.log(this.config);
 
-    this.updateMaster()
-        .then(function(){ return self.updateBranches(); })
-        .then(function(){ return self.linkDirectories(); })
-        .then(function(){ return self.finish(); })
+    self.update();
+
+    /* var web = Web(this);
+    web.listen(3000); */
+};
+
+Trogdor.prototype.update = function(){
+    var self = this;
+
+    console.log("----- Starting Run -----");
+
+    return self.emit('updateStart')
+        .then(function(){
+            return self.updateMaster();
+        })
+        .then(function(){ 
+            return self.updateBranches(); 
+        })
+        .then(function(){ 
+            console.log("link?");
+            return self.linkDirectories(); 
+        })
+        .then(function(){
+            return self.emit('updateEnd');
+        })
+        .then(function(){
+            setTimeout(function(){
+                self.update();
+            }, 60000);
+        })  
         .fail(function(err){
             console.log("Error", err);
             throw err;
         })
         .done();
-
-    var web = Web(this);
-    web.listen(3000);
 };
 
 Trogdor.prototype.updateMaster = function()
@@ -151,11 +175,6 @@ Trogdor.prototype.linkDirectories = function(){
 
     // returns a promise
     return linkUpdater.run();
-
-};
-
-Trogdor.prototype.finish = function(){
-    console.log("Finished!");
 };
 
 // let people use this class from our instance
@@ -163,4 +182,5 @@ Trogdor.prototype.Trogdor = Trogdor;
 
 var inst = new Trogdor();
 inst.Q = Q;
+inst.shell = shell;
 module.exports = inst;
