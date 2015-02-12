@@ -1,7 +1,7 @@
 {
   "name": "trogdor",
   "description": "Dynamic Stage Environments based off GitHub Branches",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "homepage": "http://github.com/deseretdigital/trogdor",
   "repository": "deseretdigital/trogdor",
   "author": "Justin Carmony <justin@justincarmony.com>",
