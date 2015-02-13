@@ -90,6 +90,8 @@ Trogdor.prototype.update = function(){
 
     console.log("----- Starting Run -----");
 
+    var allBranchNames = [];
+
     return self.emit('updateStart')
         .then(function(){
             return self.updateMaster();
@@ -101,8 +103,9 @@ Trogdor.prototype.update = function(){
             console.log("link?");
             return self.linkDirectories(); 
         })
-        .then(function(){
-            return self.emit('updateEnd');
+        .then(function(branchNames){
+            allBranchNames = branchNames;
+            return self.emit('cleanup', { allBranchNames: allBranchNames });
         })
         .then(function(){
             setTimeout(function(){
