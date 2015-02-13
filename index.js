@@ -108,9 +108,11 @@ Trogdor.prototype.update = function(){
             return self.emit('cleanup', { allBranchNames: allBranchNames });
         })
         .then(function(){
+            var waitSeconds = 60;
+            console.log('Run Finished, waiting ' + waitSeconds + ' before running again...');
             setTimeout(function(){
                 self.update();
-            }, 60000);
+            }, waitSeconds * 1000);
         })  
         .fail(function(err){
             console.log("Error", err);
